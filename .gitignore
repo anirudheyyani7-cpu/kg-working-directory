@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+.vercel/
+*.local
+
+# Environment
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
