@@ -1,14 +1,9 @@
-import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
+import TaxonomyTree from "@/components/graph/TaxonomyTree";
 
 export interface TaxonomyData {
   categories: Record<string, { name: string; generation?: string; enables: string[] }[]>;
 }
-
-const TaxonomyTree = dynamic(() => import("@/components/graph/TaxonomyTree"), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-full text-gray-400">Loading taxonomy...</div>,
-});
 
 export default async function TaxonomyPage() {
   let data: TaxonomyData = { categories: {} };
