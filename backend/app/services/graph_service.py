@@ -2,10 +2,26 @@ from neo4j import AsyncDriver
 from app.models.nodes import GraphNode, GraphLink, GraphData
 
 
+def _sanitize(value):
+    """Convert Neo4j-specific types to JSON-serializable Python types."""
+    import neo4j.time
+    if isinstance(value, (neo4j.time.Date, neo4j.time.DateTime, neo4j.time.Time, neo4j.time.Duration)):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _sanitize(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sanitize(v) for v in value]
+    return value
+
+
+def _sanitize_props(props: dict) -> dict:
+    return {k: _sanitize(v) for k, v in props.items()}
+
+
 def _to_graph_node(record_node) -> GraphNode:
     labels = list(record_node.labels)
     label = labels[0] if labels else "Unknown"
-    props = dict(record_node.items())
+    props = _sanitize_props(dict(record_node.items()))
     return GraphNode(
         id=props.get("id", str(record_node.element_id)),
         label=label,
@@ -25,7 +41,7 @@ async def get_node(driver: AsyncDriver, node_id: str) -> dict | None:
             return None
         node = record["n"]
         labels = list(node.labels)
-        props = dict(node.items())
+        props = _sanitize_props(dict(node.items()))
         return {"id": props.get("id", str(node.element_id)), "label": labels[0] if labels else "Unknown", **props}
 
 
@@ -50,7 +66,7 @@ async def get_neighbors(
         links: list[GraphLink] = []
         async for record in result:
             for node in record["path_nodes"]:
-                props = dict(node.items())
+                props = _sanitize_props(dict(node.items()))
                 nid = props.get("id", str(node.element_id))
                 if nid not in nodes_map:
                     nodes_map[nid] = _to_graph_node(node)
@@ -107,7 +123,7 @@ async def get_subgraph_by_label(driver: AsyncDriver, label: str, limit: int = 50
             for node in [record["n"], record["m"]]:
                 if node is None:
                     continue
-                props = dict(node.items())
+                props = _sanitize_props(dict(node.items()))
                 nid = props.get("id", str(node.element_id))
                 if nid not in nodes_map:
                     nodes_map[nid] = _to_graph_node(node)
