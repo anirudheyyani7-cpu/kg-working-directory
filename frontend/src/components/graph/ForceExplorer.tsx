@@ -1,22 +1,20 @@
 "use client";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useGraphStore } from "@/store/graphStore";
 import { NODE_COLORS, GraphNode, GraphLink } from "@/types/graph";
 import { api } from "@/lib/api";
 import NodeDetailPanel from "./NodeDetailPanel";
 import GraphControls from "./GraphControls";
 
-// Lazy-load react-force-graph (SSR incompatible)
-let ForceGraph2D: any = null;
-
 export default function ForceExplorer({ initialLabel = "Company" }: { initialLabel?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
+  const [ForceGraph2D, setForceGraph2D] = useState<any>(null);
   const { graphData, visibleLabels, setSelectedNode, mergeGraphData, pushHistory } = useGraphStore();
 
   useEffect(() => {
-    import("react-force-graph").then((mod) => {
-      ForceGraph2D = mod.default || mod.ForceGraph2D;
+    import("react-force-graph-2d").then((mod) => {
+      setForceGraph2D(() => mod.default);
     });
   }, []);
 
